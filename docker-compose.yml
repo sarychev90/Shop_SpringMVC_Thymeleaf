@@ -1,0 +1,11 @@
+version: '3.7'
+
+services:
+  app:
+    image: 'sarychev90/shop:v1'
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - 8080:8080
+      
