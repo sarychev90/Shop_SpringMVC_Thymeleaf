@@ -37,5 +37,17 @@ public class CostCalculator {
 		}
 		return orderItemsTotalCosts;
 	}
+	
+	public static Integer calculateTotalOrderQuantity(List<OrderItem> orderItems) {
+		Integer productsQty = 0;
+		try {
+			for (OrderItem orderItem : orderItems) {
+				productsQty += orderItem.getProductQuantity();
+			}
+		} catch (Exception e) {
+			LOGGER.log(Level.SEVERE, "Problem with calculate total order quantity. Cause: " + e);
+		}
+		return productsQty;
+	}
 
 }

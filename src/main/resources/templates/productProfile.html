@@ -19,35 +19,82 @@
 		<div class="row">
 			<div
 				class="col-lg-6 col-md-6 col-sm-6 container justify-content-center card">
-				<h1 class="text-center"><span th:text="${product.name}"></span> product</h1>
+				<h1 class="text-center"><span th:text="${commodity.name}"></span> product</h1>
 				<div class="card-body">
-					<form th:action="@{/product/edit/{id}(id=${product.id})}" th:object="${product}" method="POST">
+					<form th:action="@{/product/edit/{id}(id=${commodity.id})}" method="POST" th:object="${commodity}" enctype="multipart/form-data">
 	
 						<div class="form-group">
-							<label> Product picture </label>
-							<img th:src="@{${product.getMainPicture() == null} ? '/images/NoImage.jpg' : ${product.getMainPicture()}}"
-							height="200px" />
-						</div>
+	                        <label> Product picture (<span style="color:blue;font-weight:bold">main</span>) </label>
+	                        <input type="text" name="image1Id" th:field="*{image1Id}" class="form-control" style = "display:none"/>
+	                        <input type="file" name="image1" accept="image/*" class="form-control-file" 
+	                        onchange="document.getElementById('output1').src = window.URL.createObjectURL(this.files[0]),
+							document.getElementById('output1').height = 100">
+	                        <img id="output1"
+	                        th:src="@{${commodity.picture1 == null} ? '/images/NoImage.jpg' : ${commodity.picture1}}"
+	                        height="100px"/>
+	                    </div>
+	                    
+	                    <div class="form-group">
+	                    	<label> Product picture </label>
+	                    	<input type="text" name="image2Id" th:field="*{image2Id}" class="form-control" style = "display:none"/>
+	                        <input type="file" name="image2" accept="image/*" class="form-control-file" 
+	                        onchange="
+	                        document.getElementById('output2').src = window.URL.createObjectURL(this.files[0]),
+	                        document.getElementById('output2').height = 100">
+	                        <img id="output2"
+	                        th:src="@{${commodity.picture2 == null} ? '/images/NoImage.jpg' : ${commodity.picture2}}"
+	                        height="100px"/>
+	                    </div>
+	                    
+	                    <div class="form-group">
+	                    	<label> Product picture </label>
+	                    	<input type="text" name="image3Id" th:field="*{image3Id}" class="form-control" style = "display:none"/>
+	                        <input type="file" name="image3" accept="image/*" class="form-control-file" 
+	                        onchange="
+	                        document.getElementById('output3').src = window.URL.createObjectURL(this.files[0]),
+	                        document.getElementById('output3').height = 100">
+	                        <img id="output3"
+	                        th:src="@{${commodity.picture3 == null} ? '/images/NoImage.jpg' : ${commodity.picture3}}"
+	                        height="100px"/>
+	                    </div>
+	                    
+	                    <div class="form-group">
+	                    	<label> Product picture </label>
+	                    	<input type="text" name="image4Id" th:field="*{image4Id}" class="form-control" style = "display:none"/>
+	                        <input type="file" name="image4" accept="image/*" class="form-control-file" 
+	                        onchange="
+	                        document.getElementById('output4').src = window.URL.createObjectURL(this.files[0]),
+	                        document.getElementById('output4').height = 100">
+	                        <img id="output4"
+	                        th:src="@{${commodity.picture4 == null} ? '/images/NoImage.jpg' : ${commodity.picture4}}"
+	                        height="100px"/>
+	                    </div>
+	                    
+	                    <div class="form-group">
+	                    	<label> Product picture </label>
+	                    	<input type="text" name="image5Id" th:field="*{image5Id}" class="form-control" style = "display:none"/>
+	                        <input type="file" name="image5" accept="image/*" class="form-control-file" 
+	                        onchange="
+	                        document.getElementById('output5').src = window.URL.createObjectURL(this.files[0]),
+	                        document.getElementById('output5').height = 100">
+	                        <img id="output5"
+	                        th:src="@{${commodity.picture5 == null} ? '/images/NoImage.jpg' : ${commodity.picture5}}"
+	                        height="100px"/>
+	                    </div>
+						
 						<div class="form-group">
 							<label> Product name </label> 
-							<input type="text"
-								name="name" th:field="*{name}" class="form-control"/>
+							<input type="text" name="name" th:field="*{name}" class="form-control" required/>
 						</div>
+						
 						<div class="form-group">
 							<label> Product price UAH / kg</label> 
-							<input type="email"
-								name="price" th:field="*{price}" class="form-control" />
+							<input type="number" min="0.00" step="0.01" name="price" th:field="*{price}" class="form-control" required/>
 						</div>
 
 						<div class="form-group">
 							<label> Product description </label> 
-							<!-- <input type="text" name="description"
-								th:field="*{description}" class="form-control" /> -->
-							
-							<textarea rows="4"
-							class="form-control"				    
-						    th:field="*{description}">
-						</textarea>
+							<textarea rows="4" name="description" th:field="*{description}" class="form-control" required></textarea>
 						</div>
 
 						<div th:if="${errorMessage}">

@@ -1,8 +1,9 @@
 package best.project.shop.model;
 
 import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -13,7 +14,6 @@ import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
-import best.project.shop.service.impl.ImageConverterServiceImpl;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -30,6 +30,9 @@ public class Product {
 	@Column(name = "name")
 	private String name;
 	
+	@Column(name = "enable")
+	private Boolean enable;
+	
 	@Column(name = "description", columnDefinition="text")
 	private String description;
 	
@@ -44,22 +47,16 @@ public class Product {
 		if (null != productPictures && productPictures.size() == 1) {
 			image = productPictures.get(0).getPicture();
 		} else if (null != productPictures && productPictures.size() > 1) {
-			List<ProductPicture> mainPictures = productPictures.stream().filter(pp -> Boolean.TRUE.equals(pp.getMain())).collect(Collectors.toList());
-			if(mainPictures.isEmpty()) {
-				image = productPictures.get(0).getPicture();
-			} else {
-				image = mainPictures.get(0).getPicture();
-			}
+			sortProductPictures();
+			image = productPictures.get(0).getPicture();
 		}
-//		if (null == image) {
-//			image = ImageConverterServiceImpl.getInstance().getNoImageObject();
-//		}
 		return image;
 	}
 	
 	public String getProductPicturesImages() {
 		StringBuilder productPicturesImages = new StringBuilder();
 		try {
+			sortProductPictures();
 			List<ProductPicture> productPictures = getProductPictures();
 			if(null != productPictures && !productPictures.isEmpty()) {
 				for(int i = 0; i< productPictures.size(); i++) {
@@ -74,5 +71,26 @@ public class Product {
 		}		
 		return productPicturesImages.toString();
 	}
+	
+	public void sortProductPictures(){
+		try {
+			if(null != productPictures && !productPictures.isEmpty()) {
+				Collections.sort(productPictures, Comparator.comparing(ProductPicture::getMain).reversed());				
+			}
+		} catch (Exception e) {
+			//
+		}	
+	}
+	
+	public ProductPicture getProductPictureByIndex(int index) {
+		ProductPicture productPicture = new ProductPicture();
+		try {
+			productPicture = productPictures.get(index);
+		} catch (Exception e) {
+			//
+		}	
+		return productPicture;
+	}
+	
 
 }

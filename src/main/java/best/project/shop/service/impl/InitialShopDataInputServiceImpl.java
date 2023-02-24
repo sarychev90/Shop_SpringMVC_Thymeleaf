@@ -85,7 +85,7 @@ public class InitialShopDataInputServiceImpl implements InitialShopDataInputServ
 				Product product = createInitialProducts();
 				
 				//create order
-				//createInitialOrder(client, product);
+				createInitialOrder(client, product);
 				
 				LOGGER.log(Level.INFO, "Tables population done.");
 			} else {
@@ -99,8 +99,9 @@ public class InitialShopDataInputServiceImpl implements InitialShopDataInputServ
 
 	private void createInitialOrder(User client, Product product) {
 		Order order = new Order();
+		order.setPhone("067-777-22-33");
+		order.setAddress("st. 23, room 5");
 		order.setOrderCreateDate(new Date());
-		//order.setProductsTotalCost(CostCalculator.calculateTotalOrderCosts(orderItems));
 		order.setUser(client);
 		
 		List<OrderItem> orderItems = new ArrayList<>();
@@ -138,6 +139,7 @@ public class InitialShopDataInputServiceImpl implements InitialShopDataInputServ
 		product.setName(name);
 		product.setPrice(new BigDecimal(price));
 		product.setDescription(description);
+		product.setEnable(Boolean.TRUE);
 		
 		List<ProductPicture> productPictures = new ArrayList<>();
 		

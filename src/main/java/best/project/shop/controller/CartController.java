@@ -3,15 +3,25 @@ package best.project.shop.controller;
 import javax.servlet.http.HttpSession;
 
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import best.project.shop.helper.CartUtilsHolder;
 import best.project.shop.model.Cart;
+import best.project.shop.service.ProductService;
 
 @Controller
 public class CartController {
 	
+	private ProductService productService;
+	
+	public CartController(ProductService productService) {
+		this.productService = productService;
+	}
+
 	@PostMapping("/cart/increase/{id}")
 	@ResponseBody
 	public String increaseProduct(@PathVariable("id") Long id, HttpSession session) {
@@ -30,13 +40,21 @@ public class CartController {
 		return "products";
 	}
 	
-	@PostMapping("/cart/delete/{id}")
-	@ResponseBody
-	public String deleteProduct(@PathVariable("id") Long id, HttpSession session) {
+	@GetMapping("/cart/delete/{id}")
+	public String deleteProduct(@PathVariable("id") Long id, HttpSession session, Model model) {
 		Cart cart = getCart(session);
 		cart.deleteProduct(id);
-		session.setAttribute("cart", cart);
-		return "products";
+		CartUtilsHolder cartUnitsHolder = productService.getCartUnits(cart);
+	    model.addAttribute("cartUnitsHolder", cartUnitsHolder);
+		return "cart";
+	}
+	
+	@GetMapping("/cart")
+	public String goToCartView(HttpSession session, Model model) {
+		Cart cart = getCart(session);		
+		CartUtilsHolder cartUnitsHolder = productService.getCartUnits(cart);
+	    model.addAttribute("cartUnitsHolder", cartUnitsHolder);
+		return "cart";
 	}
 
 	private Cart getCart(HttpSession session) {
@@ -48,7 +66,4 @@ public class CartController {
 		}
 		return cart;
 	}
-	
-	
-	
 }

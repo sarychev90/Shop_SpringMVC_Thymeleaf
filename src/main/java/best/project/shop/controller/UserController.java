@@ -56,7 +56,7 @@ public class UserController {
 	@GetMapping("/logout")
 	public String doLogout(HttpSession session) {
 		session.removeAttribute("loginUser");
-		return "redirect:/login";
+		return "redirect:/products";
 	}
 	
 	@PostMapping("/user")

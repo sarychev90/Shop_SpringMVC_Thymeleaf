@@ -16,66 +16,71 @@
 <body>
 	<div th:replace="header :: header"></div>
 		
-		<div th:if="${session.loginUser != null && session.loginUser.role == 'Admin'}" style="margin-bottom: 10px;">
-			<a th:href="@{/product}"
-			class="btn btn-primary">New product <i class="fa fa-plus-square" aria-hidden="true"></i></a>		
-		</div>
-		<h3 class="text-center">Products</h3>
-		<table class="table" th:if="${products}" title="Products">
+		<h3 class="text-center">Your cart<span th:unless="${cartUnitsHolder.cartUnits}"> is empty...</span></h3>
+		<table class="table" th:if="${cartUnitsHolder.cartUnits}" title="Cart">
 			<thead class="table-dark">
 				<tr>
 					<th>Product Name</th>
 					<th>Product Image</th>
 					<th>Product Price</th>
 					<th>Product Description</th>
+					<th>Product Quantity</th>
+					<th>Product Total Cost</th>
 					<th>Actions</th>
 				</tr>
 			</thead>
+			<tfoot>
+				<tr>
+					<td colspan="3"></td>
+					<th>Total:</th>
+					<th><span id = "totalQty" th:text="${cartUnitsHolder.totalQuantity}"></span><span th:text="' kg'"></span></th>
+					<th><span id = "totalCosts" th:text="${cartUnitsHolder.totalCosts}"></span><span th:text="' UAH'"></span></th>
+					<th>
+						<a type="button" th:if="${session.loginUser}" style="width: 150px" th:href="@{/order}" class="btn btn-success">Create order <i class="fa fa-cubes" aria-hidden="true"></i></a>
+						<a type="button" th:unless="${session.loginUser}" style="width: 200px" th:href="@{/login}" class="btn btn-success">Login to create order <i class="fa fa-sign-in" aria-hidden="true"></i></a>
+					</th>
+				</tr>
+			</tfoot>
 			<tbody>
-				<tr th:each="product: ${products}">
-					<td th:text="${product.name}" th:class="${product.enable} ? '' : 'table-danger'"></td>
+				<tr th:each="cartUnit: ${cartUnitsHolder.cartUnits}">
+					<td th:text="${cartUnit.name}"></td>
 					<td>
 						<img data-toggle="modal" 
 						data-target="#pictureModal"
-						th:data-name="${product.name}"						
-						th:data-images="${product.getProductPicturesImages()}"						
-						th:src="@{${product.getMainPicture() == null} ? '/images/NoImage.jpg' : ${product.getMainPicture()}}"
+						th:data-name="${cartUnit.name}"						
+						th:data-images="${cartUnit.getProductPicturesImages()}"						
+						th:src="@{${cartUnit.getMainPicture() == null} ? '/images/NoImage.jpg' : ${cartUnit.getMainPicture()}}"
 						height="100px" />
 					</td>
-					<td th:text="${product.price + ' UAH / kg'}" th:class="${product.enable} ? '' : 'table-danger'"></td>
-					<td th:class="${product.enable} ? '' : 'table-danger'">
+					<td>
+						<span th:id = "${'prPrice' + cartUnit.id}" th:text="${cartUnit.price}"></span><span th:text="' UAH / kg'"></span>					
+					</td>
+					<td>
 						<textarea rows="4"
 							cols="20"
 						    style="border: 1px solid transparent"
-						    th:class="${product.enable} ? '' : 'table-danger'"
-						    th:text="${product.description}"
+						    th:text="${cartUnit.description}"
 						    readonly>
 						</textarea>
 					</td>
-					<td th:class="${product.enable} ? '' : 'table-danger'">
-						<a th:if="${session.loginUser != null && session.loginUser.role == 'Admin'}" 
-						th:href="@{/product/edit/{id}(id=${product.id})}" 
-						style="width: 150px"
-						class="btn btn-primary">Edit <i class="fa fa-pencil-square-o" aria-hidden="true"></i></a>
-							
-						<a th:if="${session.loginUser != null && session.loginUser.role == 'Admin' && product.enable}"
-						style="width: 150px" 						
-						data-toggle="modal" data-target="#deleteModal" 
-						th:data-id="${product.id}"
-						th:data-name="${product.name}"						
+					<td> 
+						<button type="button" th:onclick="'javascript:decreaseProduct(' + ${cartUnit.id} + ')'"
+						class="btn btn-info">-</button>						
+						<span th:id = "${'prQty' + cartUnit.id}" th:text="${cartUnit.quantity}"></span><span th:text="' kg'"></span>
+						<button type="button" th:onclick="'javascript:addProduct(' + ${cartUnit.id} + ')'"
+						class="btn btn-info">+</button>
+					</td>
+					<td>
+						<span th:id = "${'prCost' + cartUnit.id}" th:text="${cartUnit.totalCost}"></span><span th:text="' UAH'"></span>					
+					</td>
+					<td> 
+						<a type="button" style="width: 150px" th:href="@{/cart/delete/{id}(id=${cartUnit.id})}"
 						class="btn btn-danger">Delete <i class="fa fa-trash" aria-hidden="true"></i></a>
-						
-						<a th:if="${session.loginUser != null && session.loginUser.role == 'Admin' && !product.enable}"
-						th:href="@{/product/enable/{id}(id=${product.id})}"
-						style="width: 150px" 																		
-						class="btn btn-success">Renew <i class="fa fa-external-link" aria-hidden="true"></i></a>
-							 
-						<button type="button" style="width: 150px" th:onclick="'javascript:addProduct(' + ${product.id} + ')'"
-						class="btn btn-info">Add to cart <i class="fa fa-cart-plus" aria-hidden="true"></i></button>
 					</td>
 				</tr>
 			</tbody>
 		</table>
+		
 	
 	<div class="modal fade" id="pictureModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
 	  <div class="modal-dialog" role="document">
@@ -100,28 +105,6 @@
 	  </div>
 	</div>
 	
-	<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-	  <div class="modal-dialog" role="document">
-	    <div class="modal-content">
-	      <div class="modal-header">
-	        <h5 class="modal-title" id="deleteModalLabel"></h5>
-	        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-	          <span aria-hidden="true">&times;</span>
-	        </button>
-	      </div>
-	      <div class="modal-body">
-	        <form>
-		    	<div class="form-group text-center" id="delete_modal_body"></div>          
-		    </form>
-	      </div>
-	      <div class="modal-footer">
-	        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-	        <a class="btn btn-danger" id = "delete_button">Delete <i class="fa fa-trash" aria-hidden="true"></i></a>
-	      </div>
-	    </div>
-	  </div>
-	</div>
-		
 	<script th:inline="javascript">
 		function addProduct(id) {
 			$.ajax({
@@ -130,12 +113,60 @@
 				success : function(response) {
 					var cartPQty = document.getElementById('cart');
 					cartPQty.innerHTML = +cartPQty.innerHTML + 1;
+					
+					var prQty = document.getElementById('prQty'+id);					
+					prQty.innerHTML = +prQty.innerHTML + 1;
+					
+					var totalQty = document.getElementById('totalQty');					
+					totalQty.innerHTML = +totalQty.innerHTML + 1;
+					
+					var prPrice = document.getElementById('prPrice'+id);
+					var prCost = document.getElementById('prCost'+id);
+					prCost.innerHTML = (Math.round((+prCost.innerHTML + (+prPrice.innerHTML)) * 100) / 100).toFixed(2);
+														
+					var totalCosts = document.getElementById('totalCosts');
+					totalCosts.innerHTML = (Math.round((+totalCosts.innerHTML + (+prPrice.innerHTML)) * 100) / 100).toFixed(2);
+					
 					console.log("response");
 				},
 				error: function(e) {
                 	console.log("ERROR: ", e);
             	}
 			});
+		}
+		
+		function decreaseProduct(id) {
+			var prQtyPQty = document.getElementById('prQty'+id);
+			console.log("prQtyPQty: "+prQtyPQty.innerHTML);
+			if(+prQtyPQty.innerHTML > 1){
+				$.ajax({
+					type : 'POST',
+					url : '/cart/decrease/'+id,				
+					success : function(response) {
+						var cartPQty = document.getElementById('cart');					
+						cartPQty.innerHTML = +cartPQty.innerHTML - 1;
+						
+						var prQty = document.getElementById('prQty'+id);	
+						prQty.innerHTML = +prQty.innerHTML - 1;
+						
+						var totalQty = document.getElementById('totalQty');					
+						totalQty.innerHTML = +totalQty.innerHTML - 1;
+						
+						var prPrice = document.getElementById('prPrice'+id);
+						var prCost = document.getElementById('prCost'+id);
+						prCost.innerHTML = (Math.round((+prCost.innerHTML - (+prPrice.innerHTML)) * 100) / 100).toFixed(2);
+						
+						var totalCosts = document.getElementById('totalCosts');
+						totalCosts.innerHTML = (Math.round((+totalCosts.innerHTML - (+prPrice.innerHTML)) * 100) / 100).toFixed(2);
+						
+						
+						console.log("response");
+					},
+					error: function(e) {
+	                	console.log("ERROR: ", e);
+	            	}
+				});
+			}	
 		}
 		
 		$(function(){
@@ -165,20 +196,6 @@
 				}
 				var modal = $(this);								
 				modal.find('.modal-title').text('Images for ' + name);							
-			})
-		});
-		
-		$(function(){
-			$('#deleteModal').on('show.bs.modal', function (event) {
-				var button = $(event.relatedTarget);
-				var name = button.data('name');
-				var id = button.data('id');
-				var delete_modal_body = document.getElementById("delete_modal_body");
-				var delete_button = document.getElementById("delete_button");
-				delete_modal_body.innerHTML = '';
-				var content = document.createTextNode("Are you sure you want to disable the " + name + " product?");
-				delete_modal_body.appendChild(content);
-				delete_button.href = "/product/disable/"+id
 			})
 		});
 	</script>

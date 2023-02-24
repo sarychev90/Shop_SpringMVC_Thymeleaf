@@ -1,5 +1,6 @@
 package best.project.shop.model;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
@@ -15,6 +16,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
+import best.project.shop.helper.CostCalculator;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -41,10 +43,24 @@ public class Order {
 	@Column(name = "order_execute_date")
 	private Date orderExecuteDate;
 	
-	@Column(name = "execute_flag", columnDefinition="BOOLEAN DEFAULT false")
+	@Column(name = "execute_flag")
 	private Boolean executeFlag;
 	
-	@Column(name = "comment")
-	private String comment;
+	@Column(name = "address", nullable = false)
+	private String address;
+	
+	@Column(name = "phone", nullable = false)
+	private String phone;
+	
+	@Column(name = "comments")
+	private String comments;
+	
+	public BigDecimal getOrderTotalCosts() {
+		return CostCalculator.calculateTotalOrderCosts(orderItems);
+	}
+	
+	public Integer getOrderTotalQuantity() {
+		return CostCalculator.calculateTotalOrderQuantity(orderItems);
+	}
 	
 }

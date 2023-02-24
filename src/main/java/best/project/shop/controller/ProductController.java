@@ -1,5 +1,6 @@
 package best.project.shop.controller;
 
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -14,58 +15,76 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import best.project.shop.helper.ValidatorResult;
+import best.project.shop.model.Product;
 import best.project.shop.model.Roles;
 import best.project.shop.model.User;
 import best.project.shop.model.Сommodity;
-import best.project.shop.service.OrderService;
 import best.project.shop.service.ProductService;
 import best.project.shop.service.ProductValidationService;
-import best.project.shop.service.UserService;
 
 @Controller
 public class ProductController {
 	
 	private static final Logger LOGGER = Logger.getLogger(ProductController.class.getName());
 
-	private OrderService orderService;
-
-	private UserService userService;
-
 	private ProductService productService;
 	
 	private ProductValidationService productValidationService;
 	
-	public ProductController(OrderService orderService, ProductService productService, UserService userService, ProductValidationService productValidationService) {
-		this.orderService = orderService;
+	public ProductController(ProductService productService, ProductValidationService productValidationService) {
 		this.productService = productService;
-		this.userService = userService;
 		this.productValidationService = productValidationService;
 	}
 
 	@GetMapping("/products")
-	public String viewHomePage(Model model) {
-		model.addAttribute("products", productService.findAllProduct());
+	public String viewHomePage(Model model, HttpSession session) {
+		List<Product> products = null;
+		User user = (User) session.getAttribute("loginUser");
+		if (null != user && Roles.ADMIN.roleName.equals(user.getRole())) {
+			products = productService.findAllProduct();
+		} else {
+			products = productService.findAllEnableProduct();
+		}
+		model.addAttribute("products", products);
 		return "products";
 	}
 	
 	@GetMapping("/product/edit/{id}")
 	public String editProduct(@PathVariable("id") Long id, HttpSession session, Model model, RedirectAttributes redirectAttributes) {
-		String redirect = "redirect:/products"; 
-//		try {
+		String redirect = "redirect:/products";
+		try {
 			User user = (User) session.getAttribute("loginUser");
-			if(null != user && Roles.ADMIN.roleName.equals(user.getRole())) {
+			if (null != user && Roles.ADMIN.roleName.equals(user.getRole())) {
 				redirect = "productProfile";
-				model.addAttribute("product", productService.getProductById(id));
+				model.addAttribute("commodity", productService.getCommodityByProductId(id));
 			}
-//			} catch (Exception e) {
-//				LOGGER.log(Level.SEVERE, "Problem with login user operation: "+ e);
-//				redirectAttributes.addFlashAttribute("errorMessage", "An error occurred, please try login later...");        
-//				redirectAttributes.addFlashAttribute("user", user);	       
-//				redirect = "redirect:/login";
-//			}
-		
+		} catch (Exception e) {
+			LOGGER.log(Level.SEVERE, "Problem with edit product " + id + " operation: "+ e);
+			redirect = "redirect:/products";
+		}
 		return redirect;
 	}
+	
+	@PostMapping("/product/edit/{id}") 
+	public String updateProduct(@PathVariable("id") Long id, @ModelAttribute("commodity") Сommodity commodity, RedirectAttributes redirectAttributes) {
+		String redirect = "redirect:/products";		
+		try {
+			ValidatorResult validatorResult = productValidationService.validateCommodity(commodity);
+			if(!validatorResult.isValidationPass()) {
+				redirectAttributes.addFlashAttribute("errorMessage", validatorResult.getError());        
+				redirectAttributes.addFlashAttribute("commodity", commodity);	       
+				redirect = "redirect:/product/edit/"+id;				
+			} else {
+				productService.updateProduct(id, commodity);
+			}
+		} catch (Exception e) {
+			LOGGER.log(Level.SEVERE, "Problem with update product operation: "+ e);
+			redirectAttributes.addFlashAttribute("errorMessage", "An error occurred, please try update product later...");        
+			redirectAttributes.addFlashAttribute("commodity", commodity);
+			redirect = "redirect:/product/edit/"+id;
+		}
+        return redirect;
+    }
 	
 	@GetMapping("/product")
 	public String goToNewProductPage(HttpSession session, Model model) {
@@ -103,12 +122,22 @@ public class ProductController {
         return redirect;
     }
 	
-	@GetMapping("/product/delete/{id}")
-	public String deleteProduct(@PathVariable("id") Long id, HttpSession session, Model model, RedirectAttributes redirectAttributes) {
+	@GetMapping("/product/disable/{id}")
+	public String disableProduct(@PathVariable("id") Long id, HttpSession session, Model model, RedirectAttributes redirectAttributes) {
 		String redirect = "redirect:/products";
 		User user = (User) session.getAttribute("loginUser");
 		if(null != user && Roles.ADMIN.roleName.equals(user.getRole())) {
-			productService.deleteProductById(id);
+			productService.disableProductById(id);
+		}
+		return redirect;
+	}
+	
+	@GetMapping("/product/enable/{id}")
+	public String enableProduct(@PathVariable("id") Long id, HttpSession session, Model model, RedirectAttributes redirectAttributes) {
+		String redirect = "redirect:/products";
+		User user = (User) session.getAttribute("loginUser");
+		if(null != user && Roles.ADMIN.roleName.equals(user.getRole())) {
+			productService.enableProductById(id);
 		}
 		return redirect;
 	}
